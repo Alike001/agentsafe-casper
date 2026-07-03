@@ -11,8 +11,10 @@
     "typecheck": "node scripts/typecheck.js",
     "test": "node --test tests/*.test.js",
     "build": "node scripts/build.js",
+    "proof:readiness": "node scripts/proof-readiness.js",
+    "proof:demo": "node scripts/write-demo-proof.js",
     "contracts:test": "cargo test --manifest-path contracts/agent-safe-core/Cargo.toml",
-    "green-light": "npm run lint && npm run typecheck && npm test && npm run contracts:test && npm run build"
+    "green-light": "npm run lint && npm run typecheck && npm test && npm run contracts:test && npm run build && npm run proof:readiness"
   },
   "engines": {
     "node": ">=24"

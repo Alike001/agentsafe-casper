@@ -13,3 +13,5 @@ contracts/**/Cargo.lock
 .DS_Store
 screenshots/
 tmp/
+proof/demo-proof.json
+proof/testnet-proof.json

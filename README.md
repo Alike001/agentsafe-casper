@@ -18,6 +18,7 @@ AgentSafe Casper is a hackathon prototype for the Casper Agentic Buildathon 2026
 - MCP-compatible JSON-RPC endpoint with policy and receipt tools.
 - Deterministic policy engine with reason codes.
 - Rust contract-logic scaffold and tests for agent, policy, service, and receipt state.
+- Proof readiness and local demo proof scripts.
 
 ## Casper Integration Plan
 
@@ -37,8 +38,18 @@ The current code is ready to connect to Casper Testnet, but it does not yet clai
 
 ```bash
 npm run green-light
+npm run proof:demo
 npm run dev
 ```
+
+## Proof Workflow
+
+```bash
+npm run proof:readiness
+npm run proof:demo
+```
+
+`proof/demo-proof.json` is local-only evidence. Real Casper Testnet hashes must be written to `proof/testnet-proof.json` before final submission.
 
 ## API
 

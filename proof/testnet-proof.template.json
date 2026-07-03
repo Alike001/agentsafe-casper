@@ -1,0 +1,37 @@
+{
+  "network": "casper-test",
+  "status": "pending-testnet-deployment",
+  "generatedAt": null,
+  "contracts": {
+    "agentRegistry": {
+      "packageHash": null,
+      "contractHash": null,
+      "deployHash": null,
+      "explorerUrl": null
+    },
+    "policyVault": {
+      "packageHash": null,
+      "contractHash": null,
+      "deployHash": null,
+      "explorerUrl": null
+    },
+    "serviceRegistry": {
+      "packageHash": null,
+      "contractHash": null,
+      "deployHash": null,
+      "explorerUrl": null
+    },
+    "receiptLedger": {
+      "packageHash": null,
+      "contractHash": null,
+      "deployHash": null,
+      "explorerUrl": null
+    }
+  },
+  "transactions": {
+    "agentRegistered": null,
+    "policySet": null,
+    "serviceRegistered": null,
+    "receiptWritten": null
+  }
+}
