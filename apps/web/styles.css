@@ -13,7 +13,9 @@
   --warning: #9a5b00;
   --destructive: #bf332b;
   --code-bg: #0f1726;
-  --shadow: 0 18px 50px rgba(23, 32, 51, 0.10);
+  --shadow: 0 14px 34px rgba(23, 32, 51, 0.09);
+  --shadow-hover: 0 18px 42px rgba(23, 32, 51, 0.13);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 * {
@@ -32,6 +34,50 @@ body {
   font-size: 15px;
 }
 
+@keyframes rise-in {
+  from {
+    opacity: 1;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 1;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes signal-pulse {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: scaleY(0.75);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes dot-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(21, 132, 95, 0.28);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(21, 132, 95, 0);
+  }
+}
+
 a {
   color: inherit;
 }
@@ -48,6 +94,7 @@ a {
   border-bottom: 1px solid rgba(217, 225, 236, 0.85);
   background: rgba(245, 247, 251, 0.92);
   backdrop-filter: blur(18px);
+  animation: rise-in 420ms var(--ease) both;
 }
 
 .brand {
@@ -99,6 +146,7 @@ a {
   padding: 0 14px;
   font-weight: 750;
   text-decoration: none;
+  transition: background-color 160ms var(--ease), border-color 160ms var(--ease), color 160ms var(--ease), transform 160ms var(--ease);
 }
 
 .site-links a {
@@ -126,6 +174,7 @@ a {
 .nav-cta:hover,
 .button:hover {
   background: var(--accent-strong);
+  transform: translateY(-1px);
 }
 
 .button.secondary:hover {
@@ -138,18 +187,19 @@ main {
 }
 
 .hero {
-  min-height: calc(100dvh - 67px);
+  min-height: auto;
   display: grid;
   grid-template-columns: minmax(0, 0.94fr) minmax(380px, 0.78fr);
-  gap: 42px;
+  gap: 38px;
   align-items: center;
-  padding: 58px 32px 36px;
+  padding: 82px 32px 58px;
   max-width: 1220px;
   margin: 0 auto;
 }
 
 .hero-copy {
   min-width: 0;
+  animation: rise-in 560ms var(--ease) 80ms both;
 }
 
 .eyebrow {
@@ -170,13 +220,13 @@ h3 {
 
 h1 {
   max-width: 780px;
-  font-size: clamp(46px, 7vw, 86px);
-  line-height: 0.95;
+  font-size: clamp(34px, 4.8vw, 56px);
+  line-height: 1.02;
 }
 
 h2 {
-  font-size: clamp(28px, 4vw, 48px);
-  line-height: 1.03;
+  font-size: clamp(24px, 3.1vw, 38px);
+  line-height: 1.08;
 }
 
 h3 {
@@ -185,9 +235,9 @@ h3 {
 
 .hero-lede {
   max-width: 680px;
-  margin: 24px 0 0;
+  margin: 18px 0 0;
   color: #3f4a5c;
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1.55;
 }
 
@@ -195,7 +245,7 @@ h3 {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 30px;
+  margin-top: 26px;
 }
 
 .hero-stats {
@@ -203,7 +253,7 @@ h3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   max-width: 720px;
-  margin-top: 32px;
+  margin-top: 26px;
 }
 
 .hero-stats div,
@@ -218,6 +268,20 @@ h3 {
 
 .hero-stats div {
   padding: 14px;
+  animation: card-in 520ms var(--ease) both;
+  transition: transform 180ms var(--ease), box-shadow 180ms var(--ease);
+}
+
+.hero-stats div:nth-child(1) {
+  animation-delay: 170ms;
+}
+
+.hero-stats div:nth-child(2) {
+  animation-delay: 230ms;
+}
+
+.hero-stats div:nth-child(3) {
+  animation-delay: 290ms;
 }
 
 .hero-stats strong,
@@ -237,7 +301,7 @@ h3 {
 
 .hero-scene {
   position: relative;
-  min-height: 540px;
+  min-height: 460px;
   display: grid;
   align-content: center;
   gap: 12px;
@@ -246,6 +310,42 @@ h3 {
   border-radius: 12px;
   background: #ffffff;
   box-shadow: var(--shadow);
+  animation: card-in 620ms var(--ease) 180ms both;
+}
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  margin-bottom: 2px;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+}
+
+.terminal-bar span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.terminal-bar span:nth-child(1) {
+  background: #e45f5f;
+}
+
+.terminal-bar span:nth-child(2) {
+  background: #d6a438;
+}
+
+.terminal-bar span:nth-child(3) {
+  background: #39a96b;
+}
+
+.terminal-bar strong {
+  margin-left: 4px;
+  font-weight: 700;
 }
 
 .flow-card {
@@ -253,6 +353,30 @@ h3 {
   gap: 8px;
   padding: 16px;
   box-shadow: 0 12px 28px rgba(23, 32, 51, 0.08);
+  animation: card-in 560ms var(--ease) both;
+  transition: transform 180ms var(--ease), box-shadow 180ms var(--ease), border-color 180ms var(--ease);
+}
+
+.flow-card:hover,
+.feature-grid article:hover,
+.architecture-grid article:hover,
+.panel:hover,
+.hero-stats div:hover,
+.dashboard-proof-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.flow-card:nth-of-type(2) {
+  animation-delay: 260ms;
+}
+
+.flow-card:nth-of-type(4) {
+  animation-delay: 360ms;
+}
+
+.flow-card:nth-of-type(6) {
+  animation-delay: 460ms;
 }
 
 .flow-card.active {
@@ -294,6 +418,8 @@ h3 {
   height: 28px;
   margin-left: 26px;
   background: var(--border);
+  transform-origin: center;
+  animation: signal-pulse 2.4s var(--ease) infinite;
 }
 
 .blocked-callout {
@@ -303,6 +429,7 @@ h3 {
   max-width: 240px;
   padding: 14px;
   border-color: rgba(191, 51, 43, 0.25);
+  animation: card-in 560ms var(--ease) 540ms both;
 }
 
 .blocked-callout strong {
@@ -313,7 +440,8 @@ h3 {
 .section {
   max-width: 1220px;
   margin: 0 auto;
-  padding: 72px 32px;
+  padding: 62px 32px;
+  animation: rise-in 520ms var(--ease) both;
 }
 
 .section-heading {
@@ -339,6 +467,7 @@ h3 {
 
 .feature-grid article {
   padding: 20px;
+  transition: transform 180ms var(--ease), box-shadow 180ms var(--ease), border-color 180ms var(--ease);
 }
 
 .feature-index {
@@ -369,6 +498,7 @@ h3 {
   border-radius: 8px;
   background: var(--surface);
   padding: 18px;
+  transition: transform 180ms var(--ease), box-shadow 180ms var(--ease), border-color 180ms var(--ease);
 }
 
 .architecture-grid p {
@@ -436,19 +566,21 @@ h3 {
   gap: 18px;
   align-items: end;
   margin: 0 auto;
-  padding: 58px 32px 22px;
+  padding: 38px 32px 16px;
+  animation: rise-in 540ms var(--ease) both;
 }
 
 .dashboard-hero h1 {
   max-width: 760px;
-  font-size: clamp(42px, 6vw, 76px);
+  font-size: clamp(30px, 3.8vw, 46px);
+  line-height: 1.08;
 }
 
 .dashboard-hero p {
   max-width: 760px;
   margin: 18px 0 0;
   color: var(--muted);
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.55;
 }
 
@@ -461,6 +593,8 @@ h3 {
   background: var(--surface);
   padding: 16px;
   box-shadow: 0 12px 30px rgba(23, 32, 51, 0.08);
+  animation: card-in 560ms var(--ease) 140ms both;
+  transition: transform 180ms var(--ease), box-shadow 180ms var(--ease);
 }
 
 .dashboard-proof-card code {
@@ -475,7 +609,7 @@ h3 {
 }
 
 .dashboard-section {
-  padding-top: 28px;
+  padding-top: 22px;
 }
 
 .app-shell {
@@ -548,6 +682,7 @@ h3 {
   height: 8px;
   border-radius: 50%;
   background: var(--success);
+  animation: dot-pulse 2.2s var(--ease) infinite;
 }
 
 .status.success {
@@ -571,6 +706,7 @@ h3 {
 .panel {
   min-width: 0;
   padding: 18px;
+  transition: transform 180ms var(--ease), box-shadow 180ms var(--ease), border-color 180ms var(--ease);
 }
 
 .section-anchor {
@@ -628,12 +764,19 @@ button {
   font-weight: 800;
   padding: 0 14px;
   cursor: pointer;
-  transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+  transition: background-color 160ms var(--ease), border-color 160ms var(--ease), color 160ms var(--ease), transform 160ms var(--ease), box-shadow 160ms var(--ease);
 }
 
 button:hover {
   background: var(--accent-strong);
   transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(31, 111, 255, 0.18);
+}
+
+button:active,
+.button:active,
+.nav-cta:active {
+  transform: translateY(0);
 }
 
 button.secondary {
@@ -661,6 +804,13 @@ button.secondary:hover {
   border-radius: 8px;
   padding: 12px;
   background: var(--surface-strong);
+  transition: transform 160ms var(--ease), border-color 160ms var(--ease);
+}
+
+.rules li:hover,
+.timeline-item:hover {
+  transform: translateX(2px);
+  border-color: rgba(31, 111, 255, 0.28);
 }
 
 .timeline {
@@ -785,5 +935,16 @@ button.secondary:hover {
   .blocked-callout {
     position: static;
     max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
