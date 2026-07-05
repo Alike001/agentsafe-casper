@@ -7,115 +7,220 @@
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <div class="shell">
-      <aside class="sidebar">
-        <div class="brand">
-          <span class="brand-mark">A</span>
-          <div>
-            <strong>AgentSafe</strong>
-            <span>Casper</span>
+    <header class="site-nav">
+      <a class="brand" href="#home" aria-label="AgentSafe Casper home">
+        <span class="brand-mark">A</span>
+        <span>
+          <strong>AgentSafe</strong>
+          <small>Casper</small>
+        </span>
+      </a>
+      <nav class="site-links" aria-label="Primary navigation">
+        <a href="#why">Why it matters</a>
+        <a href="#proof">Testnet proof</a>
+        <a href="#demo">Dashboard</a>
+      </nav>
+      <a class="nav-cta" href="#demo">Open demo</a>
+    </header>
+
+    <main>
+      <section id="home" class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Casper Agentic Buildathon 2026</p>
+          <h1>Policy-controlled spending for autonomous AI agents.</h1>
+          <p class="hero-lede">
+            AgentSafe lets AI agents call paid services only inside user-defined rules, then writes verifiable receipts to Casper Testnet.
+          </p>
+          <div class="hero-actions">
+            <a class="button" href="#demo">Run the demo</a>
+            <a class="button secondary" href="https://testnet.cspr.live/transaction/3116400a1250d9bdfd76f7c80a07ec5474f4c48c219c710794cb2f304b79bd86" target="_blank" rel="noreferrer">View receipt tx</a>
+          </div>
+          <div class="hero-stats" aria-label="Project highlights">
+            <div>
+              <strong>12.5 CSPR</strong>
+              <span>receipt written</span>
+            </div>
+            <div>
+              <strong>1 live contract</strong>
+              <span>Casper Testnet</span>
+            </div>
+            <div>
+              <strong>MCP-ready</strong>
+              <span>agent gateway</span>
+            </div>
           </div>
         </div>
-        <nav>
-          <a class="active" href="#dashboard" data-nav-link>Dashboard</a>
-          <a href="#policies" data-nav-link>Policies</a>
-          <a href="#services" data-nav-link>Services</a>
-          <a href="#receipts" data-nav-link>Receipts</a>
-        </nav>
-      </aside>
 
-      <main>
-        <header id="dashboard" class="topbar">
-          <div>
-            <p class="eyebrow">Casper Agentic Buildathon</p>
-            <h1>Let AI agents spend safely on Casper.</h1>
+        <div class="hero-scene" aria-label="AgentSafe payment flow preview">
+          <div class="flow-card active">
+            <span>AI request</span>
+            <strong>Buy RWA risk report</strong>
+            <code>rwa_report_purchase</code>
           </div>
-          <div class="wallet">
-            <span class="dot"></span>
-            casper-test-wallet
+          <div class="flow-line"></div>
+          <div class="flow-card">
+            <span>Policy firewall</span>
+            <strong>Allowed under cap</strong>
+            <code>policy_daily_cap_rwa_allowlist</code>
           </div>
-        </header>
+          <div class="flow-line"></div>
+          <div class="flow-card success">
+            <span>Casper receipt</span>
+            <strong>Recorded on Testnet</strong>
+            <code>3116400a...4b79bd86</code>
+          </div>
+          <div class="blocked-callout">
+            <span>Blocked path</span>
+            <strong>Overspend stops before signing</strong>
+          </div>
+        </div>
+      </section>
 
-        <section class="grid">
-          <article class="panel hero-panel">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Active agent</p>
-                <h2 id="agent-name">RWA Buyer Agent</h2>
-              </div>
-              <span class="status success">Active</span>
-            </div>
-            <div class="metrics">
-              <div>
-                <span>Per-action cap</span>
-                <strong id="cap">$25</strong>
-              </div>
-              <div>
-                <span>Daily budget</span>
-                <strong id="budget">$50</strong>
-              </div>
-              <div>
-                <span>Spent today</span>
-                <strong id="spent">$0</strong>
-              </div>
-            </div>
-            <div class="actions">
-              <button id="run-allowed">Buy one RWA report</button>
-              <button id="run-blocked" class="secondary">Attempt overspend</button>
-            </div>
+      <section id="why" class="section">
+        <div class="section-heading">
+          <p class="eyebrow">Why it matters</p>
+          <h2>Agents need spending limits before they need bigger wallets.</h2>
+          <p>
+            Agent commerce breaks if users cannot define authority, inspect decisions, and prove what happened after an autonomous action.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article>
+            <span class="feature-index">01</span>
+            <h3>Policy Firewall</h3>
+            <p>Caps, allowlists, approval thresholds, expiry, and idempotency checks run before any transaction path.</p>
           </article>
+          <article>
+            <span class="feature-index">02</span>
+            <h3>MCP Agent Gateway</h3>
+            <p>Agent tools expose simulation and execution flows without giving the LLM signing authority or policy override power.</p>
+          </article>
+          <article>
+            <span class="feature-index">03</span>
+            <h3>Casper Receipt Ledger</h3>
+            <p>Approved actions become public Testnet evidence through an Odra smart contract and CSPR.live transaction links.</p>
+          </article>
+        </div>
+      </section>
 
-          <article id="policies" class="panel section-anchor">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Policy</p>
-                <h2>Firewall rules</h2>
-              </div>
-            </div>
-            <ul class="rules" id="rules"></ul>
-          </article>
+      <section id="proof" class="proof-strip section">
+        <div>
+          <p class="eyebrow">Live Casper proof</p>
+          <h2>Not a mock: this prototype already produced Testnet transactions.</h2>
+        </div>
+        <div class="proof-actions">
+          <a href="https://testnet.cspr.live/transaction/cd352660b8e2d1de2df2a52a1e043774be139467f0c0ba57b7fc2e9e88b2c411" target="_blank" rel="noreferrer">Deploy tx</a>
+          <a href="https://testnet.cspr.live/transaction/3116400a1250d9bdfd76f7c80a07ec5474f4c48c219c710794cb2f304b79bd86" target="_blank" rel="noreferrer">Receipt tx</a>
+        </div>
+      </section>
 
-          <article id="receipts" class="panel wide section-anchor">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Agent activity</p>
-                <h2>Proof timeline</h2>
-              </div>
-              <span id="last-reason" class="status neutral">Waiting</span>
-            </div>
-            <div id="timeline" class="timeline"></div>
-          </article>
+      <section id="demo" class="app-shell section">
+        <aside class="sidebar">
+          <div class="sidebar-label">Demo console</div>
+          <nav aria-label="Dashboard sections">
+            <a class="active" href="#dashboard" data-nav-link>Overview</a>
+            <a href="#policies" data-nav-link>Policies</a>
+            <a href="#services" data-nav-link>Services</a>
+            <a href="#receipts" data-nav-link>Receipts</a>
+            <a href="#contract-proof" data-nav-link>Proof</a>
+          </nav>
+        </aside>
 
-          <article id="services" class="panel section-anchor">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">MCP service</p>
-                <h2>RWA Risk Report</h2>
-              </div>
+        <div class="dashboard">
+          <header id="dashboard" class="topbar section-anchor">
+            <div>
+              <p class="eyebrow">Working prototype</p>
+              <h2>Agent commerce firewall dashboard</h2>
             </div>
-            <div class="service">
-              <span>Service ID</span>
-              <code>svc-rwa-risk</code>
-              <span>Endpoint hash</span>
-              <code>hash-endpoint-rwa-risk</code>
-              <span>Price</span>
-              <code>$10 demo credit</code>
+            <div class="wallet">
+              <span class="dot"></span>
+              casper-test-wallet
             </div>
-          </article>
+          </header>
 
-          <article class="panel">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">Casper Testnet</p>
-                <h2>Live proof</h2>
+          <div class="grid">
+            <article class="panel hero-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Active agent</p>
+                  <h3 id="agent-name">RWA Buyer Agent</h3>
+                </div>
+                <span class="status success">Active</span>
               </div>
-              <span class="status success">Deployed</span>
-            </div>
-            <div id="testnet-proof" class="proof-list"></div>
-          </article>
-        </section>
-      </main>
-    </div>
+              <div class="metrics">
+                <div>
+                  <span>Per-action cap</span>
+                  <strong id="cap">$25</strong>
+                </div>
+                <div>
+                  <span>Daily budget</span>
+                  <strong id="budget">$50</strong>
+                </div>
+                <div>
+                  <span>Spent today</span>
+                  <strong id="spent">$0</strong>
+                </div>
+              </div>
+              <div class="actions">
+                <button id="run-allowed">Buy one RWA report</button>
+                <button id="run-blocked" class="secondary">Attempt overspend</button>
+              </div>
+            </article>
+
+            <article id="policies" class="panel section-anchor">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Policies</p>
+                  <h3>Firewall rules</h3>
+                </div>
+                <span class="status success">Enforced</span>
+              </div>
+              <ul class="rules" id="rules"></ul>
+            </article>
+
+            <article id="services" class="panel section-anchor">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Services</p>
+                  <h3>RWA Risk Report API</h3>
+                </div>
+                <span class="status neutral">MCP tool</span>
+              </div>
+              <div class="service">
+                <span>Service ID</span>
+                <code>svc-rwa-risk</code>
+                <span>Endpoint hash</span>
+                <code>hash-endpoint-rwa-risk</code>
+                <span>Agent commerce role</span>
+                <code>paid RWA intelligence provider</code>
+              </div>
+            </article>
+
+            <article id="contract-proof" class="panel section-anchor">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Casper Testnet</p>
+                  <h3>Live proof</h3>
+                </div>
+                <span class="status success">Deployed</span>
+              </div>
+              <div id="testnet-proof" class="proof-list"></div>
+            </article>
+
+            <article id="receipts" class="panel wide section-anchor">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Receipts</p>
+                  <h3>Proof timeline</h3>
+                </div>
+                <span id="last-reason" class="status neutral">Waiting</span>
+              </div>
+              <div id="timeline" class="timeline"></div>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
 
     <script type="module" src="/app.js"></script>
   </body>
