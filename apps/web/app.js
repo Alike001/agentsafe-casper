@@ -12,6 +12,7 @@ const elements = {
   x402List: document.querySelector("#x402-list"),
   merchantStatus: document.querySelector("#merchant-status"),
   merchantChallenge: document.querySelector("#merchant-challenge"),
+  merchantIntegration: document.querySelector("#merchant-integration-list"),
   lastReason: document.querySelector("#last-reason"),
   runAllowed: document.querySelector("#run-allowed"),
   runBlocked: document.querySelector("#run-blocked"),
@@ -50,6 +51,7 @@ async function refresh() {
   renderAgentTrace(state.agentTrace);
   renderX402Flow(state.x402Flow);
   await renderMerchantChallenge();
+  await renderMerchantIntegration();
 }
 
 async function runDemo(variant) {
@@ -220,6 +222,36 @@ async function renderMerchantChallenge() {
   ].map(([label, value]) => `
     <span>${escapeHtml(label)}</span>
     <code>${escapeHtml(value)}</code>
+  `).join("");
+}
+
+async function renderMerchantIntegration() {
+  const catalog = await getJson("/api/merchant/services");
+  const service = catalog.services[0];
+  const snippets = [
+    {
+      label: "Catalog",
+      value: "curl /api/merchant/services"
+    },
+    {
+      label: "Unpaid request",
+      value: "curl -i /api/rwa-risk-report"
+    },
+    {
+      label: "Paid request",
+      value: "curl -H \"x-agentpay-receipt: agentpay-demo-approved\" /api/rwa-risk-report"
+    },
+    {
+      label: "Service metadata",
+      value: `${service.id} · ${service.price} ${service.currency} · ${service.endpoint}`
+    }
+  ];
+
+  elements.merchantIntegration.innerHTML = snippets.map((snippet) => `
+    <div class="integration-card">
+      <span>${escapeHtml(snippet.label)}</span>
+      <code>${escapeHtml(snippet.value)}</code>
+    </div>
   `).join("");
 }
 

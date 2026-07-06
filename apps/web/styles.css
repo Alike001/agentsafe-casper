@@ -955,6 +955,44 @@ button.ghost:hover {
   margin-bottom: 12px;
 }
 
+.integration-panel {
+  border-color: rgba(37, 88, 216, 0.18);
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9ff 100%);
+}
+
+.integration-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.integration-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 14px;
+}
+
+.integration-card span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.integration-card code {
+  overflow-wrap: anywhere;
+  border-radius: 6px;
+  background: var(--code-bg);
+  color: #dce7ff;
+  padding: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+}
+
 .checkout-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1224,7 +1262,8 @@ button.ghost:hover {
   .toolkit-grid,
   .dashboard-hero,
   .grid,
-  .checkout-cards {
+  .checkout-cards,
+  .integration-grid {
     grid-template-columns: 1fr;
   }
 

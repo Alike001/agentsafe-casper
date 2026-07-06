@@ -24,6 +24,7 @@ AgentPay Casper is a hackathon prototype for the Casper Agentic Buildathon 2026.
 - Node API for state, simulation, payment-flow runs, and reset.
 - MCP-compatible JSON-RPC endpoint with policy and receipt tools.
 - Visible agent trace showing intent, MCP tool call, policy decision, payment route, and proof.
+- Merchant services catalog endpoint for API sellers.
 - Real paid RWA API endpoint that returns HTTP `402 Payment Required` until AgentPay receipt proof is supplied.
 - x402-style paid API flow for the RWA report merchant endpoint.
 - Deterministic policy engine with reason codes.
@@ -114,11 +115,18 @@ npm run proof:demo
 ## API
 
 - `GET /api/state`
+- `GET /api/merchant/services`
 - `GET /api/rwa-risk-report`
 - `POST /api/simulate`
 - `POST /api/run-demo`
 - `POST /api/reset`
 - `POST /mcp`
+
+Merchant service catalog:
+
+```bash
+curl https://agentsafe-casper.onrender.com/api/merchant/services
+```
 
 The merchant API endpoint returns a real payment challenge before receipt proof:
 
@@ -139,6 +147,24 @@ Demo receipt-proof access:
 
 ```bash
 curl -H "x-agentpay-receipt: agentpay-demo-approved" https://agentsafe-casper.onrender.com/api/rwa-risk-report
+```
+
+## Merchant Integration
+
+An API seller can expose paid services through AgentPay by publishing service metadata and returning an HTTP payment challenge for unpaid requests.
+
+```text
+GET /api/merchant/services
+  -> service id, endpoint, price, currency, required receipt header
+
+GET /api/rwa-risk-report
+  -> 402 Payment Required
+  -> x-payment-amount: 10
+  -> x-payment-currency: CSPR
+
+GET /api/rwa-risk-report
+x-agentpay-receipt: <approved receipt>
+  -> paid RWA report
 ```
 
 Example MCP-style request:

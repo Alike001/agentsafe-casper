@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildAgentTrace, handleRwaRiskReport, merchantPaymentChallenge, x402Flow } from "../apps/api/server.js";
+import {
+  buildAgentTrace,
+  handleRwaRiskReport,
+  merchantPaymentChallenge,
+  merchantServicesCatalog,
+  x402Flow
+} from "../apps/api/server.js";
 
 test("builds a visible allowed agent trace", () => {
   const trace = buildAgentTrace(
@@ -41,6 +47,16 @@ test("builds a merchant payment challenge for the paid RWA API", () => {
   assert.equal(challenge.amount, 10);
   assert.equal(challenge.currency, "CSPR");
   assert.equal(challenge.requiredHeader, "x-agentpay-receipt");
+});
+
+test("exposes a merchant services catalog", () => {
+  const catalog = merchantServicesCatalog();
+
+  assert.equal(catalog.merchantId, "merchant-rwa-labs");
+  assert.equal(catalog.services.length, 1);
+  assert.equal(catalog.services[0].endpoint, "GET /api/rwa-risk-report");
+  assert.equal(catalog.services[0].price, 10);
+  assert.equal(catalog.services[0].currency, "CSPR");
 });
 
 test("merchant RWA API returns HTTP 402 until receipt proof is supplied", async () => {

@@ -35,6 +35,10 @@ export const server = createServer(async (request, response) => {
       return handleRwaRiskReport(request, response);
     }
 
+    if (request.url === "/api/merchant/services" && request.method === "GET") {
+      return sendJson(response, merchantServicesCatalog());
+    }
+
     if (request.url === "/api/simulate" && request.method === "POST") {
       const body = await readJson(request);
       return sendJson(response, evaluatePolicy(state, body));
@@ -94,6 +98,7 @@ function publicState() {
     agentTrace: lastTrace,
     x402Flow: x402Flow(),
     merchantApi: merchantApiPreview(),
+    merchantServices: merchantServicesCatalog(),
     testnetProof
   };
 }
@@ -204,13 +209,37 @@ export function merchantPaymentChallenge() {
   };
 }
 
+export function merchantServicesCatalog() {
+  return {
+    merchantId: "merchant-rwa-labs",
+    merchantName: "RWA Labs",
+    network: "casper-test",
+    paymentRail: "x402-style",
+    policyGateway: "/mcp",
+    services: [
+      {
+        id: "svc-rwa-risk",
+        name: "RWA Risk Report API",
+        description: "Risk score and eligibility summary for agent-purchased RWA invoice data.",
+        endpoint: "GET /api/rwa-risk-report",
+        price: 10,
+        currency: "CSPR",
+        requiredHeader: "x-agentpay-receipt",
+        status: "active",
+        receiptContract: testnetProof?.contracts?.receiptLedger?.packageHash || "ReceiptLedger not loaded"
+      }
+    ]
+  };
+}
+
 function merchantApiPreview() {
   return {
     endpoint: "GET /api/rwa-risk-report",
     status: 402,
     serviceId: "svc-rwa-risk",
     price: "10 CSPR",
-    challenge: merchantPaymentChallenge()
+    challenge: merchantPaymentChallenge(),
+    catalog: "/api/merchant/services"
   };
 }
 
