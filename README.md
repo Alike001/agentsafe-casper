@@ -9,7 +9,7 @@ AgentPay Casper is a hackathon prototype for the Casper Agentic Buildathon 2026.
 - Landing page: https://agentsafe-casper.onrender.com/
 - Working console: https://agentsafe-casper.onrender.com/dashboard
 - Health check: https://agentsafe-casper.onrender.com/healthz
-- GitHub repo: https://github.com/Alike001/agentsafe-casper
+- GitHub repo: https://github.com/Alike001/agentpay-casper
 - Casper Testnet proof: deployed `ReceiptLedger` contract + receipt write transaction
 
 ## Demo Routes
@@ -52,7 +52,7 @@ The qualification prototype has a transaction-producing Casper Testnet component
 |---|---|
 | Live landing page | https://agentsafe-casper.onrender.com/ |
 | Live console | https://agentsafe-casper.onrender.com/dashboard |
-| GitHub repo | https://github.com/Alike001/agentsafe-casper |
+| GitHub repo | https://github.com/Alike001/agentpay-casper |
 | ReceiptLedger package | `hash-aa362adaa1dbb9e67491e25206592104739e760ef754c8314d1b56bdda347833` |
 | ReceiptLedger deploy tx | https://testnet.cspr.live/transaction/cd352660b8e2d1de2df2a52a1e043774be139467f0c0ba57b7fc2e9e88b2c411 |
 | Receipt write tx | https://testnet.cspr.live/transaction/3116400a1250d9bdfd76f7c80a07ec5474f4c48c219c710794cb2f304b79bd86 |
@@ -80,6 +80,22 @@ npm run green-light
 npm run proof:demo
 npm run dev
 ```
+
+## Qualification Review Steps
+
+1. Open the landing page: https://agentsafe-casper.onrender.com/
+2. Open the console: https://agentsafe-casper.onrender.com/dashboard
+3. Review the buyer agent policy: 25 CSPR per-request cap and 50 CSPR daily budget.
+4. Review the merchant API panel for the RWA Risk Report service at 10 CSPR/request.
+5. Open the unpaid merchant endpoint and confirm it returns HTTP `402 Payment Required`:
+
+```bash
+curl -i https://agentsafe-casper.onrender.com/api/rwa-risk-report
+```
+
+6. Run the allowed 10 CSPR API purchase in the console and confirm receipt proof appears.
+7. Run the 100 CSPR attempt and confirm it is blocked before signing/payment.
+8. Review the Casper Testnet proof links in the console or in this README.
 
 ## Public Deployment
 
