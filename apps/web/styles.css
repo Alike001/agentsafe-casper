@@ -960,6 +960,11 @@ button.ghost:hover {
   background: linear-gradient(180deg, #ffffff 0%, #f7f9ff 100%);
 }
 
+.agent-run-panel {
+  border-color: rgba(21, 132, 95, 0.2);
+  background: linear-gradient(180deg, #ffffff 0%, #f5fbf8 100%);
+}
+
 .integration-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -989,6 +994,45 @@ button.ghost:hover {
   background: var(--code-bg);
   color: #dce7ff;
   padding: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+}
+
+.agent-run-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.agent-run-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 12px;
+}
+
+.agent-run-step div {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.agent-run-step p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.agent-run-step code {
+  overflow-wrap: anywhere;
+  border-radius: 6px;
+  background: var(--code-bg);
+  color: #dce7ff;
+  padding: 7px 8px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 12px;
 }
@@ -1277,6 +1321,15 @@ button.ghost:hover {
   }
 
   .trace-step .status {
+    grid-column: 2;
+    width: fit-content;
+  }
+
+  .agent-run-step {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .agent-run-step .status {
     grid-column: 2;
     width: fit-content;
   }

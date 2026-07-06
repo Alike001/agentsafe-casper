@@ -96,6 +96,7 @@ function publicState() {
     receipts: [proofReceipt(), ...state.receipts].filter(Boolean),
     spentByAgent: state.spentByAgent,
     agentTrace: lastTrace,
+    autonomousRun: buildAutonomousRun(lastTrace),
     x402Flow: x402Flow(),
     merchantApi: merchantApiPreview(),
     merchantServices: merchantServicesCatalog(),
@@ -187,6 +188,51 @@ export function x402Flow() {
     {
       label: "4. Casper receipt is committed",
       value: "Approved action maps to Casper ReceiptLedger proof"
+    }
+  ];
+}
+
+export function buildAutonomousRun(trace = buildAgentTrace()) {
+  const policyStep = trace.find((step) => step.label === "Policy decision") || {};
+  const proofStep = trace.find((step) => step.label === "Casper proof") || {};
+  const isBlocked = policyStep.status === "blocked";
+  const isComplete = policyStep.status === "complete";
+
+  return [
+    {
+      phase: "Perceive",
+      action: "Buyer agent receives task to purchase RWA risk data.",
+      tool: "merchant catalog",
+      output: "svc-rwa-risk · 10 CSPR",
+      status: "complete"
+    },
+    {
+      phase: "Request",
+      action: "Agent calls the paid merchant endpoint.",
+      tool: "GET /api/rwa-risk-report",
+      output: "HTTP 402 Payment Required",
+      status: "complete"
+    },
+    {
+      phase: "Decide",
+      action: "Agent routes payment intent through policy before spending.",
+      tool: "casper_simulate_action",
+      output: policyStep.value || "Waiting for policy check",
+      status: isBlocked ? "blocked" : isComplete ? "complete" : "ready"
+    },
+    {
+      phase: "Act",
+      action: isBlocked ? "Unsafe payment is stopped before signing." : "Approved receipt proof unlocks the paid API.",
+      tool: "x-agentpay-receipt",
+      output: proofStep.value || "Waiting for receipt proof",
+      status: isBlocked ? "blocked" : isComplete ? "complete" : "ready"
+    },
+    {
+      phase: "Record",
+      action: isBlocked ? "No Casper transaction is produced for blocked spend." : "Approved purchase maps to Casper ReceiptLedger proof.",
+      tool: "Odra ReceiptLedger",
+      output: isBlocked ? "No transaction signed" : testnetProof?.transactions?.receiptWritten?.hash || "Waiting for Testnet proof",
+      status: isBlocked ? "blocked" : "complete"
     }
   ];
 }

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildAgentTrace,
+  buildAutonomousRun,
   handleRwaRiskReport,
   merchantPaymentChallenge,
   merchantServicesCatalog,
@@ -37,6 +38,31 @@ test("documents the x402-style paid API flow", () => {
   assert.equal(flow.length, 4);
   assert.equal(flow.some((step) => step.value.includes("402 Payment Required")), true);
   assert.equal(flow.some((step) => step.label.includes("Merchant")), true);
+});
+
+test("builds an autonomous agent run from checkout trace", () => {
+  const run = buildAutonomousRun(buildAgentTrace(
+    { amount: 10 },
+    { verdict: "allow", reasonCode: "ALLOWED" },
+    { txHash: "testnet-demo-transaction" }
+  ));
+
+  assert.equal(run.length, 5);
+  assert.deepEqual(run.map((step) => step.phase), ["Perceive", "Request", "Decide", "Act", "Record"]);
+  assert.equal(run.find((step) => step.phase === "Decide").status, "complete");
+  assert.equal(run.find((step) => step.phase === "Act").output, "testnet-demo-transaction");
+});
+
+test("marks autonomous run blocked before payment", () => {
+  const run = buildAutonomousRun(buildAgentTrace(
+    { amount: 100 },
+    { verdict: "block", reasonCode: "AMOUNT_OVER_LIMIT" },
+    null
+  ));
+
+  assert.equal(run.find((step) => step.phase === "Decide").status, "blocked");
+  assert.equal(run.find((step) => step.phase === "Act").status, "blocked");
+  assert.equal(run.find((step) => step.phase === "Record").output, "No transaction signed");
 });
 
 test("builds a merchant payment challenge for the paid RWA API", () => {

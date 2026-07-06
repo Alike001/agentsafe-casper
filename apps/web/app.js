@@ -13,6 +13,7 @@ const elements = {
   merchantStatus: document.querySelector("#merchant-status"),
   merchantChallenge: document.querySelector("#merchant-challenge"),
   merchantIntegration: document.querySelector("#merchant-integration-list"),
+  autonomousRun: document.querySelector("#autonomous-run-list"),
   lastReason: document.querySelector("#last-reason"),
   runAllowed: document.querySelector("#run-allowed"),
   runBlocked: document.querySelector("#run-blocked"),
@@ -49,6 +50,7 @@ async function refresh() {
   renderCheckoutCards(state);
   renderProof(state.testnetProof);
   renderAgentTrace(state.agentTrace);
+  renderAutonomousRun(state.autonomousRun);
   renderX402Flow(state.x402Flow);
   await renderMerchantChallenge();
   await renderMerchantIntegration();
@@ -191,6 +193,23 @@ function renderAgentTrace(trace) {
         <div>
           <strong>${escapeHtml(step.label)}</strong>
           <code>${escapeHtml(step.value)}</code>
+        </div>
+        <span class="status ${status}">${escapeHtml(step.status)}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderAutonomousRun(run) {
+  elements.autonomousRun.innerHTML = run.map((step, index) => {
+    const status = step.status === "blocked" ? "destructive" : step.status === "complete" ? "success" : "neutral";
+    return `
+      <div class="agent-run-step">
+        <span class="trace-index">${String(index + 1).padStart(2, "0")}</span>
+        <div>
+          <strong>${escapeHtml(step.phase)}</strong>
+          <p>${escapeHtml(step.action)}</p>
+          <code>${escapeHtml(step.tool)} -> ${escapeHtml(step.output)}</code>
         </div>
         <span class="status ${status}">${escapeHtml(step.status)}</span>
       </div>
