@@ -10,6 +10,8 @@ const elements = {
   testnetProof: document.querySelector("#testnet-proof"),
   agentTrace: document.querySelector("#agent-trace-list"),
   x402List: document.querySelector("#x402-list"),
+  merchantStatus: document.querySelector("#merchant-status"),
+  merchantChallenge: document.querySelector("#merchant-challenge"),
   lastReason: document.querySelector("#last-reason"),
   runAllowed: document.querySelector("#run-allowed"),
   runBlocked: document.querySelector("#run-blocked"),
@@ -47,6 +49,7 @@ async function refresh() {
   renderProof(state.testnetProof);
   renderAgentTrace(state.agentTrace);
   renderX402Flow(state.x402Flow);
+  await renderMerchantChallenge();
 }
 
 async function runDemo(variant) {
@@ -199,6 +202,24 @@ function renderX402Flow(flow) {
       <strong>${escapeHtml(step.label)}</strong>
       <span>${escapeHtml(step.value)}</span>
     </div>
+  `).join("");
+}
+
+async function renderMerchantChallenge() {
+  const response = await fetch("/api/rwa-risk-report");
+  const payload = await response.json();
+  elements.merchantStatus.textContent = String(response.status);
+  elements.merchantStatus.className = response.status === 402 ? "status destructive" : "status success";
+  elements.merchantChallenge.innerHTML = [
+    ["HTTP status", `${response.status} ${response.statusText || "Payment Required"}`],
+    ["Service", payload.serviceId || "svc-rwa-risk"],
+    ["Amount", `${payload.amount || 10} ${payload.currency || "CSPR"}`],
+    ["Payment rail", payload.paymentRail || "x402-style"],
+    ["Required header", payload.requiredHeader || "x-agentpay-receipt"],
+    ["Receipt contract", payload.receiptContract || "ReceiptLedger"]
+  ].map(([label, value]) => `
+    <span>${escapeHtml(label)}</span>
+    <code>${escapeHtml(value)}</code>
   `).join("");
 }
 

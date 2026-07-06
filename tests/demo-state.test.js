@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildAgentTrace, x402Flow } from "../apps/api/server.js";
+import { buildAgentTrace, handleRwaRiskReport, merchantPaymentChallenge, x402Flow } from "../apps/api/server.js";
 
 test("builds a visible allowed agent trace", () => {
   const trace = buildAgentTrace(
@@ -32,3 +32,43 @@ test("documents the x402-style paid API flow", () => {
   assert.equal(flow.some((step) => step.value.includes("402 Payment Required")), true);
   assert.equal(flow.some((step) => step.label.includes("Merchant")), true);
 });
+
+test("builds a merchant payment challenge for the paid RWA API", () => {
+  const challenge = merchantPaymentChallenge();
+
+  assert.equal(challenge.status, 402);
+  assert.equal(challenge.serviceId, "svc-rwa-risk");
+  assert.equal(challenge.amount, 10);
+  assert.equal(challenge.currency, "CSPR");
+  assert.equal(challenge.requiredHeader, "x-agentpay-receipt");
+});
+
+test("merchant RWA API returns HTTP 402 until receipt proof is supplied", async () => {
+  const challengeResponse = createMockResponse();
+  handleRwaRiskReport({ headers: {} }, challengeResponse);
+  const challenge = JSON.parse(challengeResponse.body);
+  assert.equal(challengeResponse.status, 402);
+  assert.equal(challenge.error, "PAYMENT_REQUIRED");
+  assert.equal(challenge.serviceId, "svc-rwa-risk");
+
+  const paidResponse = createMockResponse();
+  handleRwaRiskReport({ headers: { "x-agentpay-receipt": "agentpay-demo-approved" } }, paidResponse);
+  const report = JSON.parse(paidResponse.body);
+  assert.equal(paidResponse.status, 200);
+  assert.equal(report.rating, "LOW_RISK");
+});
+
+function createMockResponse() {
+  return {
+    status: 200,
+    headers: {},
+    body: "",
+    writeHead(status, headers) {
+      this.status = status;
+      this.headers = headers;
+    },
+    end(body) {
+      this.body = body;
+    }
+  };
+}

@@ -31,6 +31,10 @@ export const server = createServer(async (request, response) => {
       return sendJson(response, publicState());
     }
 
+    if (request.url === "/api/rwa-risk-report" && request.method === "GET") {
+      return handleRwaRiskReport(request, response);
+    }
+
     if (request.url === "/api/simulate" && request.method === "POST") {
       const body = await readJson(request);
       return sendJson(response, evaluatePolicy(state, body));
@@ -89,6 +93,7 @@ function publicState() {
     spentByAgent: state.spentByAgent,
     agentTrace: lastTrace,
     x402Flow: x402Flow(),
+    merchantApi: merchantApiPreview(),
     testnetProof
   };
 }
@@ -179,6 +184,69 @@ export function x402Flow() {
       value: "Approved action maps to Casper ReceiptLedger proof"
     }
   ];
+}
+
+export function merchantPaymentChallenge() {
+  return {
+    error: "PAYMENT_REQUIRED",
+    status: 402,
+    message: "RWA Risk Report API costs 10 CSPR per request.",
+    serviceId: "svc-rwa-risk",
+    endpoint: "GET /api/rwa-risk-report",
+    amount: 10,
+    currency: "CSPR",
+    network: "casper-test",
+    paymentRail: "x402-style",
+    requiredHeader: "x-agentpay-receipt",
+    receiptContract: testnetProof?.contracts?.receiptLedger?.packageHash || "ReceiptLedger not loaded",
+    policyGateway: "/mcp",
+    proofUrl: testnetProof?.transactions?.receiptWritten?.explorerUrl || null
+  };
+}
+
+function merchantApiPreview() {
+  return {
+    endpoint: "GET /api/rwa-risk-report",
+    status: 402,
+    serviceId: "svc-rwa-risk",
+    price: "10 CSPR",
+    challenge: merchantPaymentChallenge()
+  };
+}
+
+export function handleRwaRiskReport(request, response) {
+  const receiptHeader = request.headers["x-agentpay-receipt"];
+  const proofHash = testnetProof?.transactions?.receiptWritten?.hash;
+  const sessionReceipt = state.receipts.find((receipt) => receipt.status === "recorded");
+  const validProof = receiptHeader && (
+    receiptHeader === proofHash ||
+    receiptHeader === sessionReceipt?.txHash ||
+    receiptHeader === "agentpay-demo-approved"
+  );
+
+  if (!validProof) {
+    response.writeHead(402, {
+      "content-type": "application/json; charset=utf-8",
+      "x-payment-required": "true",
+      "x-payment-amount": "10",
+      "x-payment-currency": "CSPR",
+      "x-payment-network": "casper-test",
+      "x-payment-service": "svc-rwa-risk"
+    });
+    response.end(JSON.stringify(merchantPaymentChallenge(), null, 2));
+    return;
+  }
+
+  return sendJson(response, {
+    serviceId: "svc-rwa-risk",
+    reportId: "rwa-risk-report-demo",
+    rating: "LOW_RISK",
+    confidence: 0.92,
+    paidBy: "RWA Procurement Agent",
+    paymentReceipt: receiptHeader,
+    receiptProof: testnetProof?.transactions?.receiptWritten?.explorerUrl || null,
+    summary: "Demo RWA invoice is eligible for agent purchase under current buyer policy."
+  });
 }
 
 function blockedPaymentEvent(action, outcome) {
