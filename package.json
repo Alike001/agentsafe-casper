@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "x402-style API payment gateway with policy controls and Casper Testnet receipt proof for AI agents.",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "node apps/api/server.js",

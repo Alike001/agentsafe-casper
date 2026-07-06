@@ -16,7 +16,7 @@ AgentPay Casper is a hackathon prototype for the Casper Agentic Buildathon 2026.
 
 - Landing page: `npm run dev`, then open `http://localhost:4173`
 - Working console: `http://localhost:4173/dashboard`
-- Demo video: TBD
+- Demo video: https://youtu.be/Q91PSfwQnao
 
 ## What Works Now
 
