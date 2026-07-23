@@ -11,7 +11,7 @@ export const ReasonCode = Object.freeze({
   INVALID_SERVICE: "INVALID_SERVICE"
 });
 
-export function createDemoState(now = new Date("2026-07-03T12:00:00.000Z")) {
+export function createDemoState(now = new Date()) {
   return {
     agents: {
       "agent-rwa-001": {

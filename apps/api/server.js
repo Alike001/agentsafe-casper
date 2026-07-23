@@ -1,86 +1,212 @@
-import { createReadStream } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { stat } from "node:fs/promises";
 import { createServer } from "node:http";
-import { extname, join, normalize } from "node:path";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import express from "express";
+import { compileMandateIntent, csprToMotes } from "../../packages/ai-policy-compiler/index.js";
+import { createCasperX402Middleware } from "../../packages/casper-x402/index.js";
+import { buildCreateMandateTransaction } from "../../packages/casper-transactions/index.js";
+import { loadLocalEnvironment, publicRuntimeConfig } from "../../packages/config/index.js";
+import {
+  canonicalPolicy,
+  createMandateDraft,
+  evaluateMandate,
+  MandateStatus,
+  validateMandate
+} from "../../packages/mandate-engine/index.js";
+import { JsonMandateStore } from "../../packages/mandate-store/index.js";
 import { applyAllowedAction, createDemoState, evaluatePolicy } from "../../packages/policy-engine/index.js";
-import { handleMcpRequest } from "../mcp-server/tools.js";
+import { handleOfficialMcpRequest } from "../mcp-server/server.js";
 
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "../..");
+loadLocalEnvironment(root);
 const webRoot = join(root, "apps/web");
 const port = Number(process.env.PORT || 4173);
 let state = createDemoState(new Date());
 const testnetProof = await loadTestnetProof();
+if (!process.env.RECEIPT_LEDGER_PACKAGE_HASH && testnetProof?.contracts?.receiptLedger?.packageHash) {
+  process.env.RECEIPT_LEDGER_PACKAGE_HASH = testnetProof.contracts.receiptLedger.packageHash;
+}
 let lastTrace = buildAgentTrace();
+const productStore = new JsonMandateStore(process.env.AGENTPAY_DATA_FILE || join(root, ".data/agentpay.json"));
+let storeInitialization;
+const ensureStore = () => storeInitialization ||= productStore.initialize();
+const app = express();
+const x402 = createCasperX402Middleware();
 
-const mime = {
-  ".html": "text/html; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8"
-};
+app.disable("x-powered-by");
+app.use(express.json({ limit: "32kb" }));
 
-export const server = createServer(async (request, response) => {
-  try {
-    if (request.url === "/healthz" && request.method === "GET") {
-      return sendJson(response, { ok: true, service: "agentpay-casper" });
-    }
+app.get("/healthz", asyncRoute(async (_request, response) => {
+  await ensureStore();
+  response.json({ ok: true, service: "agentpay-casper", version: "0.2.0" });
+}));
 
-    if (request.url === "/api/state" && request.method === "GET") {
-      return sendJson(response, publicState());
-    }
-
-    if (request.url === "/api/rwa-risk-report" && request.method === "GET") {
-      return handleRwaRiskReport(request, response);
-    }
-
-    if (request.url === "/api/merchant/services" && request.method === "GET") {
-      return sendJson(response, merchantServicesCatalog());
-    }
-
-    if (request.url === "/api/simulate" && request.method === "POST") {
-      const body = await readJson(request);
-      return sendJson(response, evaluatePolicy(state, body));
-    }
-
-    if (request.url === "/api/run-demo" && request.method === "POST") {
-      const body = await readJson(request);
-      const action = {
-        agentId: "agent-rwa-001",
-        serviceId: "svc-rwa-risk",
-        actionType: "rwa_report_purchase",
-        amount: body.variant === "blocked" ? 100 : 10,
-        idempotencyKey: `demo-${body.variant || "allowed"}-${Date.now()}`
-      };
-      const result = body.variant === "blocked"
-        ? { outcome: evaluatePolicy(state, action), receipt: null }
-        : applyAllowedAction(state, action, "hash-rwa-report-low-risk");
-
-      if (!result.receipt) {
-        state.receipts.unshift(blockedPaymentEvent(action, result.outcome));
-      }
-
-      lastTrace = buildAgentTrace(action, result.outcome, result.receipt);
-      return sendJson(response, result);
-    }
-
-    if (request.url === "/api/reset" && request.method === "POST") {
-      state = createDemoState(new Date());
-      lastTrace = buildAgentTrace();
-      return sendJson(response, { ok: true, state: publicState() });
-    }
-
-    if (request.url === "/mcp" && request.method === "POST") {
-      const body = await readJson(request);
-      return sendJson(response, handleMcpRequest(state, body));
-    }
-
-    return serveStatic(request, response);
-  } catch (error) {
-    return sendJson(response, { error: error.message }, 500);
-  }
+app.get("/api/config", (_request, response) => response.json(publicRuntimeConfig()));
+app.get("/runtime-config.js", (_request, response) => {
+  const config = JSON.stringify(publicRuntimeConfig()).replace(/</g, "\\u003c");
+  response.type("text/javascript").send([
+    `window.AGENTPAY_CONFIG = ${config};`,
+    "const clickUIOptions = { uiContainer: 'csprclick-ui', rootAppElement: '#app', showTopBar: false, defaultTheme: 'light' };",
+    "const clickSDKOptions = { appName: 'AgentPay Casper', appId: window.AGENTPAY_CONFIG.csprClickAppId || 'csprclick-template', chainName: 'casper-test', casperNode: 'https://rpc.testnet.casper.network/rpc', providers: ['casper-wallet', 'ledger', 'metamask-snap'] };"
+  ].join("\n"));
 });
+app.get("/api/state", (_request, response) => response.json(publicState()));
+app.get("/api/rwa-risk-report", handleRwaRiskReport);
+app.get("/api/merchant/services", (_request, response) => response.json(merchantServicesCatalog()));
+
+app.post("/api/simulate", (request, response) => response.json(evaluatePolicy(state, request.body)));
+app.post("/api/run-demo", (request, response) => {
+  const action = {
+    agentId: "agent-rwa-001",
+    serviceId: "svc-rwa-risk",
+    actionType: "rwa_report_purchase",
+    amount: request.body.variant === "blocked" ? 100 : 10,
+    idempotencyKey: `qualification-${request.body.variant || "allowed"}-${Date.now()}`
+  };
+  const result = request.body.variant === "blocked"
+    ? { outcome: evaluatePolicy(state, action), receipt: null }
+    : applyAllowedAction(state, action, "hash-rwa-report-low-risk");
+  if (!result.receipt) state.receipts.unshift(blockedPaymentEvent(action, result.outcome));
+  lastTrace = buildAgentTrace(action, result.outcome, result.receipt);
+  response.json(result);
+});
+app.post("/api/reset", (_request, response) => {
+  state = createDemoState(new Date());
+  lastTrace = buildAgentTrace();
+  response.json({ ok: true, state: publicState() });
+});
+
+app.get("/api/mandates", asyncRoute(async (_request, response) => {
+  await ensureStore();
+  const mandates = await productStore.listMandates();
+  response.json({ mandates: mandates.map(withValidation) });
+}));
+
+app.get("/api/mandates/:mandateId", asyncRoute(async (request, response) => {
+  await ensureStore();
+  const mandate = await requireMandate(request.params.mandateId);
+  response.json(withValidation(mandate));
+}));
+
+app.post("/api/mandates", asyncRoute(async (request, response) => {
+  await ensureStore();
+  const mandate = createMandateDraft(mandateInputFromRequest(request.body));
+  await productStore.saveMandate(mandate);
+  response.status(201).json(withValidation(mandate));
+}));
+
+app.post("/api/mandates/compile", asyncRoute(async (request, response) => {
+  await ensureStore();
+  const result = await compileMandateIntent({
+    ...request.body,
+    availableServices: merchantServicesCatalog().services.map((service) => ({
+      id: service.id,
+      name: service.name,
+      priceCSPR: service.price
+    }))
+  });
+  await productStore.saveMandate(result.mandate);
+  response.status(201).json(result);
+}));
+
+app.post("/api/mandates/:mandateId/evaluate", asyncRoute(async (request, response) => {
+  await ensureStore();
+  const mandate = await requireMandate(request.params.mandateId);
+  const seenIdempotencyKeys = await productStore.seenIdempotencyKeys(mandate.id);
+  const decision = evaluateMandate(mandate, {
+    agentId: mandate.agentId,
+    serviceId: request.body.serviceId,
+    actionType: request.body.actionType || "paid_service_call",
+    amountMotes: request.body.amountMotes || csprToMotes(request.body.amountCSPR),
+    idempotencyKey: request.body.idempotencyKey,
+    approvalId: request.body.approvalId
+  }, { seenIdempotencyKeys });
+  const execution = {
+    id: `execution-${crypto.randomUUID()}`,
+    mandateId: mandate.id,
+    ...decision.action,
+    verdict: decision.verdict,
+    reasonCode: decision.reasonCode,
+    message: decision.message,
+    settlement: null,
+    receipt: null,
+    createdAt: new Date().toISOString()
+  };
+  await productStore.saveExecution(execution);
+  response.status(decision.verdict === "allow" ? 200 : 422).json({ decision, execution });
+}));
+
+app.post("/api/mandates/:mandateId/activation-submissions", asyncRoute(async (request, response) => {
+  await ensureStore();
+  const mandate = await requireMandate(request.params.mandateId);
+  if (!request.body.transactionHash) throw httpError(400, "A Casper transaction hash is required.");
+  const pending = {
+    ...mandate,
+    status: MandateStatus.PENDING,
+    ownerPublicKey: String(request.body.ownerPublicKey || mandate.ownerPublicKey),
+    activation: {
+      status: "submitted",
+      transactionHash: String(request.body.transactionHash),
+      submittedAt: new Date().toISOString()
+    },
+    updatedAt: new Date().toISOString()
+  };
+  await productStore.saveMandate(pending);
+  response.status(202).json({
+    mandate: withValidation(pending),
+    message: "Activation submitted. Authority remains pending until Casper confirmation is verified."
+  });
+}));
+
+app.post("/api/mandates/:mandateId/transactions/activate", asyncRoute(async (request, response) => {
+  await ensureStore();
+  const mandate = await requireMandate(request.params.mandateId);
+  if (request.body.ownerPublicKey && request.body.ownerPublicKey !== mandate.ownerPublicKey) {
+    throw httpError(403, "Connected wallet does not own this mandate draft.");
+  }
+  response.json(buildCreateMandateTransaction(mandate));
+}));
+
+app.get("/api/mandates/:mandateId/executions", asyncRoute(async (request, response) => {
+  await ensureStore();
+  response.json({ executions: await productStore.listExecutions(request.params.mandateId) });
+}));
+
+app.post("/mcp", asyncRoute(async (request, response) => {
+  await ensureStore();
+  await handleOfficialMcpRequest(request, response, request.body, {
+    store: productStore,
+    services: merchantServicesCatalog().services
+  });
+}));
+app.get("/mcp", (_request, response) => response.status(405).json(mcpMethodNotAllowed()));
+app.delete("/mcp", (_request, response) => response.status(405).json(mcpMethodNotAllowed()));
+
+if (x402.configured) app.use(x402.middleware);
+app.get("/api/x402/rwa-risk-report", (request, response) => {
+  if (!x402.configured) {
+    return response.status(503).json({
+      error: "X402_NOT_CONFIGURED",
+      message: "Casper x402 settlement requires facilitator, payee, and WCSPR asset configuration."
+    });
+  }
+  return response.json(paidRwaRiskReport(request.headers["payment-response"] || null));
+});
+
+app.get(["/", "/landing"], (_request, response) => response.sendFile(join(webRoot, "index.html")));
+app.get(["/dashboard", "/console"], (_request, response) => response.sendFile(join(webRoot, "dashboard.html")));
+app.use(express.static(webRoot, { index: false, fallthrough: true }));
+app.use((_request, response) => response.status(404).json({ error: "NOT_FOUND" }));
+app.use((error, _request, response, _next) => {
+  const status = Number(error.statusCode || error.status || 500);
+  response.status(status).json({
+    error: error.name || "Error",
+    message: status >= 500 ? "The request could not be completed." : error.message
+  });
+});
+
+export const server = createServer(app);
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   server.listen(port, () => {
@@ -340,37 +466,65 @@ function blockedPaymentEvent(action, outcome) {
   };
 }
 
-async function serveStatic(request, response) {
-  const url = new URL(request.url || "/", `http://${request.headers.host || "localhost"}`);
-  const routeMap = {
-    "/": "/index.html",
-    "/landing": "/index.html",
-    "/dashboard": "/dashboard.html",
-    "/console": "/dashboard.html"
+function mandateInputFromRequest(body = {}) {
+  return {
+    id: body.id || `mandate-${crypto.randomUUID()}`,
+    name: body.name,
+    ownerPublicKey: body.ownerPublicKey,
+    agentId: body.agentId,
+    agentName: body.agentName,
+    agentAccountHash: body.agentAccountHash,
+    allowedServiceIds: body.allowedServiceIds,
+    maxAmountPerActionMotes: body.maxAmountPerActionMotes || csprToMotes(body.maxAmountPerActionCSPR ?? 10),
+    dailyBudgetMotes: body.dailyBudgetMotes || csprToMotes(body.dailyBudgetCSPR ?? 50),
+    approvalThresholdMotes: body.approvalThresholdMotes || csprToMotes(body.approvalThresholdCSPR ?? 10),
+    expiresAt: body.expiresAt,
+    intent: body.intent,
+    status: MandateStatus.DRAFT
   };
-  const requestedPath = routeMap[url.pathname] || url.pathname;
-  const safePath = normalize(requestedPath).replace(/^(\.\.[/\\])+/, "");
-  const filePath = join(webRoot, safePath);
+}
 
-  try {
-    const info = await stat(filePath);
-    if (!info.isFile()) throw new Error("Not a file");
-    response.writeHead(200, { "content-type": mime[extname(filePath)] || "application/octet-stream" });
-    createReadStream(filePath).pipe(response);
-  } catch {
-    response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
-    response.end("Not found");
-  }
+function withValidation(mandate) {
+  return { mandate, canonicalPolicy: canonicalPolicy(mandate), validation: validateMandate(mandate) };
+}
+
+async function requireMandate(id) {
+  const mandate = await productStore.getMandate(id);
+  if (!mandate) throw httpError(404, `Mandate not found: ${id}`);
+  return mandate;
+}
+
+function paidRwaRiskReport(paymentResponse) {
+  return {
+    serviceId: "svc-rwa-risk",
+    reportId: `rwa-report-${Date.now()}`,
+    rating: "LOW_RISK",
+    confidence: 0.92,
+    settlementRail: "x402 exact on Casper",
+    paymentResponse,
+    generatedAt: new Date().toISOString()
+  };
+}
+
+function asyncRoute(handler) {
+  return (request, response, next) => Promise.resolve(handler(request, response, next)).catch(next);
+}
+
+function httpError(statusCode, message) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
+
+function mcpMethodNotAllowed() {
+  return {
+    jsonrpc: "2.0",
+    id: null,
+    error: { code: -32000, message: "Method not allowed. Use POST for stateless Streamable HTTP." }
+  };
 }
 
 function sendJson(response, payload, status = 200) {
   response.writeHead(status, { "content-type": "application/json; charset=utf-8" });
   response.end(JSON.stringify(payload, null, 2));
-}
-
-async function readJson(request) {
-  const chunks = [];
-  for await (const chunk of request) chunks.push(chunk);
-  if (chunks.length === 0) return {};
-  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }

@@ -3,262 +3,217 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AgentPay Casper Console</title>
-    <link rel="stylesheet" href="/styles.css">
+    <meta name="description" content="Create and inspect wallet-owned spending mandates for AI agents on Casper.">
+    <title>Mandate Workbench | AgentPay Casper</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://cdn.cspr.click">
+    <link rel="stylesheet" href="/workbench.css">
+    <script src="/runtime-config.js"></script>
+    <script defer src="https://cdn.cspr.click/ui/v2.0.0/csprclick-client-2.0.0.js"></script>
+    <script defer src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script defer src="/workbench.js"></script>
   </head>
   <body>
-    <header class="site-nav dashboard-nav">
-      <a class="brand" href="/" aria-label="AgentPay Casper home">
-        <span class="brand-mark">A</span>
-        <span>
-          <strong>AgentPay</strong>
-          <small>Console</small>
-        </span>
-      </a>
-      <nav class="site-links" aria-label="Dashboard navigation">
-        <a href="#dashboard">Overview</a>
-        <a href="#policies">Policies</a>
-        <a href="#receipts">Receipts</a>
-      </nav>
-      <a class="nav-cta" href="/">Back to landing</a>
-    </header>
-
-    <main>
-      <section class="dashboard-hero">
-        <div>
-          <p class="eyebrow">Agent commerce gateway</p>
-          <h1>AI agents can pay paid APIs without unlimited authority.</h1>
-          <p>
-            This console shows the product path: a merchant publishes a paid RWA API, a buyer agent receives a 402 payment request, AgentPay checks policy, and Casper records the approved receipt.
-          </p>
+    <div id="app" class="product-app">
+      <div id="csprclick-ui" aria-hidden="true"></div>
+      <header class="app-header">
+        <a class="app-brand" href="/" aria-label="AgentPay home">
+          <span class="app-brand-mark">A</span>
+          <span><strong>AgentPay</strong><small>Casper</small></span>
+        </a>
+        <div class="header-context">
+          <span class="network-state"><span></span>Casper Testnet</span>
+          <span id="sync-state" class="quiet-state">Workbench ready</span>
         </div>
-        <div class="dashboard-proof-card">
-          <span class="status success">Casper Testnet deployed</span>
-          <code>contract-package-aa362adaa1dbb9e67491e25206592104739e760ef754c8314d1b56bdda347833</code>
-          <div class="proof-mini-grid">
-            <div>
-              <span>Receipt tx</span>
-              <a href="https://testnet.cspr.live/transaction/3116400a1250d9bdfd76f7c80a07ec5474f4c48c219c710794cb2f304b79bd86" target="_blank" rel="noreferrer">3116400a...4b79bd86</a>
-            </div>
-            <div>
-              <span>Flow</span>
-              <strong>402 -> policy -> receipt</strong>
-            </div>
-          </div>
-        </div>
-      </section>
+        <button id="wallet-button" class="command secondary" type="button">
+          <i data-lucide="wallet"></i>
+          <span>Connect wallet</span>
+        </button>
+      </header>
 
-      <section id="demo" class="app-shell section dashboard-section">
-        <aside class="sidebar">
-          <div class="sidebar-label">Product console</div>
-          <nav aria-label="Dashboard sections">
-            <a class="active" href="#dashboard" data-nav-link>Overview</a>
-            <a href="#services" data-nav-link>Merchant API</a>
-            <a href="#policies" data-nav-link>Policies</a>
-            <a href="#agent-trace" data-nav-link>Checkout</a>
-            <a href="#checkout-cards" data-nav-link>Cards</a>
-            <a href="#receipts" data-nav-link>Receipts</a>
-            <a href="#contract-proof" data-nav-link>Proof</a>
+      <div class="workbench-shell">
+        <aside class="primary-rail" aria-label="Product navigation">
+          <nav>
+            <button class="rail-link active" data-section="mandates" type="button"><i data-lucide="scroll-text"></i><span>Mandates</span></button>
+            <button class="rail-link" data-section="agents" type="button"><i data-lucide="bot"></i><span>Agents</span></button>
+            <button class="rail-link" data-section="services" type="button"><i data-lucide="waypoints"></i><span>Services</span></button>
+            <button class="rail-link" data-section="executions" type="button"><i data-lucide="activity"></i><span>Executions</span></button>
+            <button class="rail-link" data-section="receipts" type="button"><i data-lucide="receipt-text"></i><span>Receipts</span></button>
           </nav>
+          <div class="rail-footer">
+            <a href="/" title="Back to product page"><i data-lucide="arrow-left"></i><span>Product</span></a>
+            <a href="https://testnet.cspr.live" target="_blank" rel="noreferrer" title="Open Casper Testnet explorer"><i data-lucide="external-link"></i><span>Explorer</span></a>
+          </div>
         </aside>
 
-        <div class="dashboard">
-          <header id="dashboard" class="topbar section-anchor">
-            <div>
-              <p class="eyebrow">Live checkout</p>
-              <h2>Run the agent payment flow</h2>
-            </div>
-            <div class="wallet">
-              <span class="dot"></span>
-              casper-test-wallet
-            </div>
-          </header>
-
-          <div class="grid">
-            <article id="launchpad" class="panel wide section-anchor launchpad-panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Checkout launchpad</p>
-                  <h3>Configure an AgentPay checkout</h3>
-                </div>
-                <span id="launchpad-status" class="status neutral">Ready</span>
-              </div>
-              <form id="launchpad-form" class="launchpad-form">
-                <label>
-                  <span>API service name</span>
-                  <input id="config-service-name" name="serviceName" value="RWA Risk Report API">
-                </label>
-                <label>
-                  <span>Price per request</span>
-                  <input id="config-service-price" name="servicePrice" type="number" min="1" max="50" value="10">
-                </label>
-                <label>
-                  <span>Per-request cap</span>
-                  <input id="config-cap" name="cap" type="number" min="1" max="100" value="25">
-                </label>
-                <label>
-                  <span>Daily budget</span>
-                  <input id="config-budget" name="budget" type="number" min="1" max="500" value="50">
-                </label>
-                <button type="submit">Generate checkout</button>
-              </form>
-              <div id="launchpad-output" class="launchpad-output"></div>
-            </article>
-
-            <article class="panel hero-panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Buyer agent</p>
-                  <h3 id="agent-name">RWA Procurement Agent</h3>
-                </div>
-                <span class="status success">Active</span>
-              </div>
-              <div class="metrics">
-                <div>
-                  <span>Per-request cap</span>
-                  <strong id="cap">25 CSPR</strong>
-                </div>
-                <div>
-                  <span>Daily budget</span>
-                  <strong id="budget">50 CSPR</strong>
-                </div>
-                <div>
-                  <span>Agent spend</span>
-                  <strong id="spent">0 CSPR</strong>
-                </div>
-              </div>
-              <div class="actions">
-                <button id="run-allowed">Pay 10 CSPR API call</button>
-                <button id="run-blocked" class="secondary">Attempt 100 CSPR call</button>
-                <button id="reset-demo" class="ghost">Reset console</button>
-              </div>
-            </article>
-
-            <article id="checkout-cards" class="panel wide section-anchor checkout-panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Agent checkout cards</p>
-                  <h3>Payment request, policy decision, receipt proof</h3>
-                </div>
-                <span class="status neutral">Product view</span>
-              </div>
-              <div id="checkout-card-list" class="checkout-cards"></div>
-            </article>
-
-            <article id="policies" class="panel section-anchor">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Buyer policy</p>
-                  <h3>Spending rules</h3>
-                </div>
-                <span class="status success">Enforced</span>
-              </div>
-              <ul class="rules" id="rules"></ul>
-            </article>
-
-            <article id="services" class="panel section-anchor">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Merchant API</p>
-                  <h3 id="merchant-service-name">RWA Risk Report API</h3>
-                </div>
-                <span id="merchant-service-price" class="status neutral">10 CSPR/request</span>
-              </div>
-              <div class="service">
-                <span>Service ID</span>
-                <code>svc-rwa-risk</code>
-                <span>Payment challenge</span>
-                <code>402 Payment Required · X-Payment-Amount: 10 CSPR</code>
-                <span>Live endpoint</span>
-                <code>GET /api/rwa-risk-report</code>
-                <span>Endpoint hash</span>
-                <code>hash-endpoint-rwa-risk</code>
-                <span>Agent commerce role</span>
-                <code>paid RWA intelligence provider for buyer agents</code>
-              </div>
-            </article>
-
-            <article id="merchant-response" class="panel section-anchor">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Live merchant response</p>
-                  <h3>Real HTTP 402 challenge</h3>
-                </div>
-                <span id="merchant-status" class="status neutral">Checking</span>
-              </div>
-              <div id="merchant-challenge" class="service"></div>
-            </article>
-
-            <article id="merchant-integration" class="panel wide section-anchor integration-panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Merchant integration</p>
-                  <h3>How an API seller plugs into AgentPay</h3>
-                </div>
-                <span class="status neutral">Copy-ready</span>
-              </div>
-              <div id="merchant-integration-list" class="integration-grid"></div>
-            </article>
-
-            <article id="autonomous-run" class="panel wide section-anchor agent-run-panel">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Autonomous agent run</p>
-                  <h3>Perceive, request, decide, act, record</h3>
-                </div>
-                <span class="status neutral">Agentic flow</span>
-              </div>
-              <div id="autonomous-run-list" class="agent-run-grid"></div>
-            </article>
-
-            <article id="agent-trace" class="panel wide section-anchor">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Agent checkout trace</p>
-                  <h3>Request to payment to Casper proof</h3>
-                </div>
-                <span class="status neutral">MCP-visible</span>
-              </div>
-              <div id="agent-trace-list" class="trace-grid"></div>
-            </article>
-
-            <article id="x402-flow" class="panel section-anchor">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">x402-style payment</p>
-                  <h3>HTTP payment path</h3>
-                </div>
-                <span class="status neutral">Casper-ready</span>
-              </div>
-              <div id="x402-list" class="protocol-flow"></div>
-            </article>
-
-            <article id="contract-proof" class="panel section-anchor">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">Casper Testnet</p>
-                  <h3>Live proof</h3>
-                </div>
-                <span class="status success">Deployed</span>
-              </div>
-              <div id="testnet-proof" class="proof-list"></div>
-            </article>
-
-            <article id="receipts" class="panel wide section-anchor">
-              <div class="panel-header">
-                <div>
-                  <p class="eyebrow">AgentPay receipts</p>
-                  <h3>Purchase timeline</h3>
-                </div>
-                <span id="last-reason" class="status neutral">Waiting</span>
-              </div>
-              <div id="timeline" class="timeline"></div>
-            </article>
+        <aside class="object-list" aria-label="Spending mandates">
+          <div class="object-list-header">
+            <div><span>Authority</span><h1>Mandates</h1></div>
+            <button id="new-mandate" class="icon-command" type="button" title="Create mandate" aria-label="Create mandate"><i data-lucide="plus"></i></button>
           </div>
-        </div>
-      </section>
-    </main>
+          <div class="object-filter">
+            <i data-lucide="search"></i>
+            <input id="mandate-search" type="search" placeholder="Find a mandate" aria-label="Find a mandate">
+          </div>
+          <div id="mandate-list" class="mandate-list" aria-live="polite"></div>
+          <div class="list-protocol-note">
+            <span>Authority model</span>
+            <strong>Owner wallet -> agent account</strong>
+            <small>Enforced by Odra on Casper Testnet</small>
+          </div>
+        </aside>
 
-    <script type="module" src="/app.js"></script>
+        <main class="workspace" id="workspace">
+          <section id="empty-workspace" class="empty-workspace">
+            <div class="empty-symbol"><i data-lucide="shield-check"></i></div>
+            <h2>No spending mandate selected</h2>
+            <p>Define exactly which paid services an agent can buy, its limits, and when its authority ends.</p>
+            <button class="command primary" data-open-create type="button"><i data-lucide="plus"></i><span>Create a mandate</span></button>
+          </section>
+
+          <section id="mandate-workspace" class="mandate-workspace" hidden>
+            <header class="mandate-heading">
+              <button id="back-to-mandates" class="icon-command mobile-back" type="button" title="Back to mandates" aria-label="Back to mandates"><i data-lucide="arrow-left"></i></button>
+              <div class="heading-main">
+                <div class="status-line"><span id="mandate-status" class="status-indicator draft">DRAFT</span><span id="mandate-network">casper:casper-test</span></div>
+                <h2 id="mandate-name">Mandate</h2>
+                <p id="mandate-agent">Agent account</p>
+              </div>
+              <div class="heading-actions">
+                <button id="activate-mandate" class="command primary" type="button"><i data-lucide="fingerprint"></i><span>Approve with wallet</span></button>
+                <button id="revoke-mandate" class="icon-command destructive" type="button" title="Revoke mandate" aria-label="Revoke mandate"><i data-lucide="ban"></i></button>
+              </div>
+            </header>
+
+            <div class="workspace-tabs" role="tablist" aria-label="Mandate details">
+              <button class="workspace-tab active" data-tab="overview" role="tab" type="button">Overview</button>
+              <button class="workspace-tab" data-tab="policy" role="tab" type="button">Policy</button>
+              <button class="workspace-tab" data-tab="executions" role="tab" type="button">Executions</button>
+              <button class="workspace-tab" data-tab="contract" role="tab" type="button">Contract</button>
+            </div>
+
+            <div id="tab-overview" class="tab-panel active" role="tabpanel">
+              <section class="workspace-section authority-section">
+                <div class="section-title"><h3>Bounded authority</h3><span id="validation-summary" class="validation-summary">Not validated</span></div>
+                <div class="authority-grid">
+                  <div><span>Owner</span><code id="owner-key">Not connected</code></div>
+                  <div><span>Agent account</span><code id="agent-account">Not assigned</code></div>
+                  <div><span>Per action</span><strong id="action-limit">0 WCSPR</strong></div>
+                  <div><span>Approval above</span><strong id="approval-limit">0 WCSPR</strong></div>
+                  <div><span>Expires</span><strong id="mandate-expiry">-</strong></div>
+                </div>
+              </section>
+              <section class="workspace-section budget-section">
+                <div class="section-title"><h3>Daily budget</h3><strong id="budget-remaining">0 WCSPR remaining</strong></div>
+                <div class="budget-track"><span id="budget-progress"></span></div>
+                <div class="budget-labels"><span id="budget-spent">0 spent</span><span id="budget-total">0 total</span></div>
+              </section>
+              <section class="workspace-section">
+                <div class="section-title"><h3>Approved services</h3><button class="text-command" data-tab-target="policy" type="button">Inspect policy</button></div>
+                <div id="approved-services" class="service-rows"></div>
+              </section>
+              <section class="workspace-section">
+                <div class="section-title"><h3>Latest execution</h3><button id="run-policy-check" class="command secondary compact" type="button"><i data-lucide="play"></i><span>Run policy check</span></button></div>
+                <div id="latest-execution" class="timeline-empty">No action has been evaluated against this mandate.</div>
+              </section>
+            </div>
+
+            <div id="tab-policy" class="tab-panel" role="tabpanel" hidden>
+              <section class="workspace-section intent-section">
+                <div class="section-title"><h3>Human intent</h3><span>AI drafts, deterministic engine decides</span></div>
+                <blockquote id="mandate-intent"></blockquote>
+              </section>
+              <section class="workspace-section policy-split">
+                <div>
+                  <div class="section-title"><h3>Validation checks</h3></div>
+                  <div id="validation-checks" class="check-list"></div>
+                </div>
+                <div>
+                  <div class="section-title"><h3>Canonical policy</h3><button id="copy-policy" class="icon-command" type="button" title="Copy policy JSON" aria-label="Copy policy JSON"><i data-lucide="copy"></i></button></div>
+                  <pre id="policy-json" class="code-block"></pre>
+                </div>
+              </section>
+            </div>
+
+            <div id="tab-executions" class="tab-panel" role="tabpanel" hidden>
+              <section class="workspace-section execution-section">
+                <div class="section-title"><h3>Policy decisions</h3><span>Deterministic and replay-safe</span></div>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Status</th><th>Service</th><th>Amount</th><th>Reason</th><th>Time</th></tr></thead>
+                    <tbody id="execution-table"></tbody>
+                  </table>
+                </div>
+                <div id="execution-empty" class="table-empty">No executions recorded.</div>
+              </section>
+            </div>
+
+            <div id="tab-contract" class="tab-panel" role="tabpanel" hidden>
+              <section class="workspace-section">
+                <div class="section-title"><h3>MandateGuard</h3><span id="guard-state" class="integration-state">Deployment required</span></div>
+                <dl class="contract-facts">
+                  <div><dt>Network</dt><dd><code>casper-test</code></dd></div>
+                  <div><dt>Package hash</dt><dd><code id="guard-package">Not deployed</code></dd></div>
+                  <div><dt>Policy hash</dt><dd><code id="policy-hash">-</code></dd></div>
+                  <div><dt>Activation tx</dt><dd id="activation-transaction">Not submitted</dd></div>
+                </dl>
+              </section>
+              <section class="workspace-section">
+                <div class="section-title"><h3>Qualification receipt proof</h3><span class="integration-state live">LIVE TESTNET</span></div>
+                <dl id="receipt-proof" class="contract-facts"></dl>
+              </section>
+            </div>
+          </section>
+        </main>
+
+        <aside id="context-inspector" class="context-inspector" aria-label="Protocol status">
+          <div class="inspector-header"><div><span>System</span><h2>Protocol status</h2></div><button id="refresh-status" class="icon-command" type="button" title="Refresh status" aria-label="Refresh status"><i data-lucide="refresh-cw"></i></button></div>
+          <div id="integration-list" class="integration-list"></div>
+          <div class="security-boundary">
+            <i data-lucide="shield"></i>
+            <div><strong>Signing boundary</strong><p>The LLM drafts constraints. Deterministic checks decide. Only the wallet signs.</p></div>
+          </div>
+          <div class="historical-proof">
+            <span>Existing Testnet evidence</span>
+            <a href="https://testnet.cspr.live/transaction/3116400a1250d9bdfd76f7c80a07ec5474f4c48c219c710794cb2f304b79bd86" target="_blank" rel="noreferrer">Receipt write <i data-lucide="external-link"></i></a>
+          </div>
+        </aside>
+      </div>
+
+      <div id="create-backdrop" class="drawer-backdrop" hidden></div>
+      <aside id="create-drawer" class="create-drawer" aria-label="Create spending mandate" aria-hidden="true">
+        <header><div><span>New authority</span><h2>Create spending mandate</h2></div><button id="close-create" class="icon-command" type="button" title="Close" aria-label="Close"><i data-lucide="x"></i></button></header>
+        <form id="mandate-form">
+          <div class="wallet-requirement" id="wallet-requirement"><i data-lucide="wallet"></i><div><strong>Owner wallet</strong><span>Connect CSPR.click before compiling authority.</span></div></div>
+          <label class="form-field full"><span>Mandate intent</span><textarea id="intent-input" rows="4" required>Allow the RWA procurement agent to buy only approved risk reports, up to 10 WCSPR per request and 50 WCSPR per day, for seven days.</textarea></label>
+          <label class="form-field full"><span>Agent account hash</span><input id="agent-account-input" required value="account-hash-3975323bebe4fc7eed16f29262ff7756fb745a00aa3a08f5c36a945bf924b2cb"></label>
+          <fieldset>
+            <legend>Approved service</legend>
+            <label class="service-choice"><input type="checkbox" checked disabled><span><strong>RWA Risk Report API</strong><small>svc-rwa-risk · 10 WCSPR</small></span></label>
+          </fieldset>
+          <div class="constraint-grid">
+            <label class="form-field"><span>Per-action max</span><div class="amount-input"><input id="per-action-input" type="number" min="1" step="1" value="10"><b>WCSPR</b></div></label>
+            <label class="form-field"><span>Daily budget</span><div class="amount-input"><input id="daily-budget-input" type="number" min="1" step="1" value="50"><b>WCSPR</b></div></label>
+            <label class="form-field"><span>Approval above</span><div class="amount-input"><input id="approval-input" type="number" min="0" step="1" value="10"><b>WCSPR</b></div></label>
+            <label class="form-field"><span>Expires</span><select id="duration-input"><option value="24">24 hours</option><option value="168" selected>7 days</option><option value="720">30 days</option></select></label>
+          </div>
+          <div id="create-feedback" class="create-feedback" aria-live="polite"></div>
+          <footer>
+            <button id="manual-draft" class="command secondary" type="button">Create manually</button>
+            <button id="compile-draft" class="command primary" type="submit"><i data-lucide="sparkles"></i><span>Compile with AI</span></button>
+          </footer>
+        </form>
+      </aside>
+
+      <div id="action-dialog" class="dialog-backdrop" hidden>
+        <form id="action-form" class="action-dialog">
+          <header><div><span>Deterministic check</span><h2>Evaluate paid API action</h2></div><button id="close-action" class="icon-command" type="button" aria-label="Close"><i data-lucide="x"></i></button></header>
+          <label class="form-field"><span>Service</span><select id="action-service"><option value="svc-rwa-risk">RWA Risk Report API</option><option value="svc-unapproved">Unapproved API</option></select></label>
+          <label class="form-field"><span>Amount</span><div class="amount-input"><input id="action-amount" type="number" value="10" min="1"><b>WCSPR</b></div></label>
+          <footer><button class="command secondary" type="button" id="cancel-action">Cancel</button><button class="command primary" type="submit"><i data-lucide="play"></i><span>Evaluate</span></button></footer>
+        </form>
+      </div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
   </body>
 </html>

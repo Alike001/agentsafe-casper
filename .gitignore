@@ -8,6 +8,7 @@ build/
 !.env.example
 coverage/
 *.log
+.data/
 contracts/**/target/
 contracts/**/Cargo.lock
 contracts/**/.odra/
