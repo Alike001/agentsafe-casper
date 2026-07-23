@@ -101,6 +101,12 @@ code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", ui-monos
 .status-mini.pending { color: var(--blue); }
 .status-mini.revoked, .status-mini.expired { color: var(--blocked); }
 .mandate-list-empty { padding: 30px 18px; color: var(--muted); text-align: center; font-size: 12px; }
+.onchain-list-proof { border-top: 1px solid var(--border); padding: 10px 12px; }
+.onchain-list-proof a { min-height: 38px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px; border: 1px solid #b8ddcf; background: #f3fbf8; color: var(--green); padding: 8px 9px; text-decoration: none; }
+.onchain-list-proof span { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; }
+.onchain-list-proof span svg, .onchain-list-proof > a > svg { width: 14px; height: 14px; }
+.onchain-list-proof code { grid-column: 1; color: var(--muted); font-size: 10px; }
+.onchain-list-proof > a > svg { grid-column: 2; grid-row: 1 / span 2; }
 .list-protocol-note { display: grid; gap: 3px; border-top: 1px solid var(--border); padding: 12px 14px; }
 .list-protocol-note span, .list-protocol-note small { color: var(--muted); font-size: 10px; }
 .list-protocol-note strong { font-size: 11px; }
@@ -109,8 +115,18 @@ code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", ui-monos
 .empty-workspace { min-height: 100%; display: grid; place-content: center; justify-items: center; padding: 32px; text-align: center; }
 .empty-symbol { width: 48px; height: 48px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 8px; background: var(--white); color: var(--red); }
 .empty-symbol svg { width: 22px; height: 22px; }
-.empty-workspace h2 { margin: 16px 0 6px; font-size: 20px; }
-.empty-workspace p { max-width: 420px; margin: 0 0 18px; color: var(--muted); }
+.onchain-authority { width: min(660px, 100%); margin-top: 16px; text-align: left; }
+.onchain-authority h2 { margin: 12px 0 6px; font-size: 24px; line-height: 1.15; }
+.onchain-authority > p { max-width: 620px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.authority-proof-kicker { display: flex; align-items: center; justify-content: space-between; gap: 14px; color: var(--green); font-family: ui-monospace, monospace; font-size: 10px; font-weight: 800; }
+.authority-proof-kicker span { display: inline-flex; align-items: center; gap: 6px; }
+.authority-proof-kicker svg { width: 14px; height: 14px; }
+.authority-proof-kicker code { color: var(--muted); font-size: 10px; font-weight: 500; }
+.onchain-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 22px 0 0; border-top: 1px solid var(--border-strong); border-left: 1px solid var(--border); background: var(--white); }
+.onchain-facts > div { min-width: 0; min-height: 70px; display: grid; align-content: center; gap: 4px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 11px 12px; }
+.onchain-facts dt { color: var(--muted); font-size: 10px; }
+.onchain-facts dd { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); font-size: 12px; font-weight: 700; }
+.onchain-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
 .mandate-workspace { min-height: 100%; background: var(--white); }
 .mandate-heading { min-height: 112px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--border); padding: 20px 24px; }
 .status-line { display: flex; align-items: center; gap: 10px; color: var(--muted); font-family: ui-monospace, monospace; font-size: 11px; }
@@ -286,6 +302,8 @@ fieldset legend { padding: 0 4px; }
   .policy-split { grid-template-columns: 1fr; }
   .policy-split > div + div { border-top: 1px solid var(--border); border-left: 0; padding-top: 20px; padding-left: 0; }
   .constraint-grid { grid-template-columns: 1fr; }
+  .onchain-authority { margin-top: 14px; }
+  .onchain-facts { grid-template-columns: 1fr 1fr; }
   .create-drawer form { padding: 14px; }
 }
 

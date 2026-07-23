@@ -24,7 +24,8 @@ process.env.MANDATE_GUARD_PACKAGE_HASH ||= DEFAULT_MANDATE_GUARD_PACKAGE_HASH;
 const webRoot = join(root, "apps/web");
 const port = Number(process.env.PORT || 4173);
 let state = createDemoState(new Date());
-const testnetProof = await loadTestnetProof();
+const testnetProof = await loadProof("testnet-proof.json");
+const mandateGuardProof = await loadProof("mandate-guard-testnet-proof.json");
 if (!process.env.RECEIPT_LEDGER_PACKAGE_HASH && testnetProof?.contracts?.receiptLedger?.packageHash) {
   process.env.RECEIPT_LEDGER_PACKAGE_HASH = testnetProof.contracts.receiptLedger.packageHash;
 }
@@ -227,13 +228,14 @@ function publicState() {
     x402Flow: x402Flow(),
     merchantApi: merchantApiPreview(),
     merchantServices: merchantServicesCatalog(),
-    testnetProof
+    testnetProof,
+    mandateGuardProof
   };
 }
 
-async function loadTestnetProof() {
+async function loadProof(filename) {
   try {
-    const proofPath = join(root, "proof/testnet-proof.json");
+    const proofPath = join(root, "proof", filename);
     return JSON.parse(await readFile(proofPath, "utf8"));
   } catch {
     return null;

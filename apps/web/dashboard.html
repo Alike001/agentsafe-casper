@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://cdn.cspr.click">
     <link rel="stylesheet" href="/workbench.css">
     <script src="/runtime-config.js"></script>
-    <script defer src="https://cdn.cspr.click/ui/v2.0.0/csprclick-client-2.0.0.js"></script>
     <script defer src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
     <script defer src="/workbench.js"></script>
   </head>
@@ -56,6 +55,7 @@
             <input id="mandate-search" type="search" placeholder="Find a mandate" aria-label="Find a mandate">
           </div>
           <div id="mandate-list" class="mandate-list" aria-live="polite"></div>
+          <div id="onchain-list-proof" class="onchain-list-proof"></div>
           <div class="list-protocol-note">
             <span>Authority model</span>
             <strong>Owner wallet -> agent account</strong>
@@ -66,9 +66,7 @@
         <main class="workspace" id="workspace">
           <section id="empty-workspace" class="empty-workspace">
             <div class="empty-symbol"><i data-lucide="shield-check"></i></div>
-            <h2>No spending mandate selected</h2>
-            <p>Define exactly which paid services an agent can buy, its limits, and when its authority ends.</p>
-            <button class="command primary" data-open-create type="button"><i data-lucide="plus"></i><span>Create a mandate</span></button>
+            <div id="onchain-authority" class="onchain-authority" aria-live="polite"></div>
           </section>
 
           <section id="mandate-workspace" class="mandate-workspace" hidden>

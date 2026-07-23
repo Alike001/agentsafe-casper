@@ -3,6 +3,7 @@ const appState = {
   mandates: [],
   services: [],
   proof: null,
+  mandateGuardProof: null,
   selectedId: null,
   wallet: null,
   activeSection: "mandates",
@@ -66,6 +67,7 @@ function bindEvents() {
 }
 
 function bindCsprClick() {
+  if (!appState.config.csprClickAppId) return;
   window.addEventListener("csprclick:loaded", async () => {
     for (const eventName of ["csprclick:signed_in", "csprclick:switched_account"]) {
       window.csprclick.on(eventName, updateActiveWallet);
@@ -75,6 +77,13 @@ function bindCsprClick() {
     }
     await updateActiveWallet();
   });
+  if (!document.querySelector('script[data-csprclick-client]')) {
+    const script = document.createElement("script");
+    script.defer = true;
+    script.dataset.csprclickClient = "true";
+    script.src = "https://cdn.cspr.click/ui/v2.0.0/csprclick-client-2.0.0.js";
+    document.head.append(script);
+  }
 }
 
 async function connectWallet() {
@@ -128,10 +137,12 @@ async function refreshProductState() {
     appState.mandates = mandateData.mandates || [];
     appState.services = catalog.services || [];
     appState.proof = legacyState.testnetProof || null;
+    appState.mandateGuardProof = legacyState.mandateGuardProof || null;
     if (appState.selectedId && !appState.mandates.some((item) => item.mandate.id === appState.selectedId)) {
       appState.selectedId = null;
     }
     renderIntegrationStatus();
+    renderOnChainListProof();
     renderMandateList();
     renderSelectedMandate();
     setSyncState("Workbench ready");
@@ -195,7 +206,10 @@ function renderSelectedMandate() {
   elements.mandateWorkspace.hidden = !hasSelection;
   elements.objectList.classList.toggle("has-selection", hasSelection);
   elements.workspace.classList.toggle("has-selection", hasSelection);
-  if (!record) return;
+  if (!record) {
+    renderOnChainAuthority();
+    return;
+  }
 
   const { mandate, validation, canonicalPolicy } = record;
   $("#mandate-status").textContent = mandate.status.toUpperCase();
@@ -247,6 +261,50 @@ function renderSelectedMandate() {
   renderReceiptProof();
   renderExecutions();
   renderLatestExecution();
+  window.lucide?.createIcons();
+}
+
+function renderOnChainAuthority() {
+  const target = $("#onchain-authority");
+  if (!target) return;
+  const proof = appState.mandateGuardProof;
+  if (!proof?.contract || !proof?.mandate) {
+    target.innerHTML = `
+      <h2>No spending mandate selected</h2>
+      <p>Define exactly which paid services an agent can buy, its limits, and when its authority ends.</p>
+      <button class="command primary" data-open-create type="button"><i data-lucide="plus"></i><span>Create a mandate</span></button>`;
+    target.querySelector("[data-open-create]")?.addEventListener("click", openCreateDrawer);
+    window.lucide?.createIcons();
+    return;
+  }
+
+  const mandate = proof.mandate;
+  const transaction = mandate.createTransaction;
+  target.innerHTML = `
+    <div class="authority-proof-kicker"><span><i data-lucide="badge-check"></i> VERIFIED ON CASPER TESTNET</span><code>${escapeHtml(shortHash(proof.contract.packageHash))}</code></div>
+    <h2>One active authority is already public.</h2>
+    <p>AgentPay has a real, bounded mandate for RWA data procurement on Casper. Create a separate mandate to define new agent authority.</p>
+    <dl class="onchain-facts">
+      <div><dt>Agent</dt><dd>${escapeHtml(mandate.agentId)}</dd></div>
+      <div><dt>Service</dt><dd>${escapeHtml(mandate.allowedServiceId)}</dd></div>
+      <div><dt>Per action</dt><dd>${escapeHtml(formatTestnetCSPR(mandate.maxAmountPerActionMotes))}</dd></div>
+      <div><dt>Daily budget</dt><dd>${escapeHtml(formatTestnetCSPR(mandate.dailyBudgetMotes))}</dd></div>
+      <div><dt>Expires</dt><dd>${escapeHtml(formatDate(mandate.expiresAt))}</dd></div>
+      <div><dt>Approval</dt><dd>Owner required</dd></div>
+    </dl>
+    <div class="onchain-actions">
+      <a class="command secondary" href="${escapeAttribute(transaction.explorerUrl)}" target="_blank" rel="noreferrer"><i data-lucide="external-link"></i><span>Inspect mandate transaction</span></a>
+      <button class="command primary" data-open-create type="button"><i data-lucide="plus"></i><span>Create a mandate</span></button>
+    </div>`;
+  target.querySelector("[data-open-create]")?.addEventListener("click", openCreateDrawer);
+  window.lucide?.createIcons();
+}
+
+function renderOnChainListProof() {
+  const target = $("#onchain-list-proof");
+  const proof = appState.mandateGuardProof;
+  if (!target || !proof?.mandate?.createTransaction) return;
+  target.innerHTML = `<a href="${escapeAttribute(proof.mandate.createTransaction.explorerUrl)}" target="_blank" rel="noreferrer"><span><i data-lucide="badge-check"></i>Testnet authority</span><code>${escapeHtml(shortHash(proof.mandate.createTransaction.hash))}</code><i data-lucide="external-link"></i></a>`;
   window.lucide?.createIcons();
 }
 
@@ -554,6 +612,10 @@ function formatWCSPR(motes) {
   const whole = value / 1_000_000_000n;
   const fraction = (value % 1_000_000_000n).toString().padStart(9, "0").replace(/0+$/, "");
   return `${whole}${fraction ? `.${fraction}` : ""} WCSPR`;
+}
+
+function formatTestnetCSPR(motes) {
+  return `${BigInt(motes) / 1_000_000_000n} CSPR`;
 }
 
 function formatDate(value) {
