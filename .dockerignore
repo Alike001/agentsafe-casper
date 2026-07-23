@@ -1,0 +1,12 @@
+node_modules
+.git
+.env
+.env.*
+!.env.example
+.data
+coverage
+dist
+screenshots
+tmp
+contracts/**/target
+contracts/**/.odra

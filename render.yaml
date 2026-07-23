@@ -1,7 +1,11 @@
 services:
   - type: web
     name: agentsafe-casper
-    env: docker
+    runtime: node
     plan: free
-    dockerfilePath: ./Dockerfile
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
     healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 24
